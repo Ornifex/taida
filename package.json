@@ -1,0 +1,67 @@
+{
+  "name": "taida",
+  "version": "0.1.0",
+  "main": "dist-electron/main/index.js",
+  "description": "Electron Vite React boilerplate.",
+  "author": "Jonathan <persoon@outlook.com>",
+  "private": true,
+  "debug": {
+    "env": {
+      "VITE_DEV_SERVER_URL": "http://127.0.0.1:7777/"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder",
+    "preview": "vite preview",
+    "pretest": "vite build --mode=test",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@radix-ui/react-select": "^2.2.5",
+    "@tailwindcss/vite": "^4.1.11",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "electron-updater": "^6.3.9",
+    "express": "^5.1.0",
+    "http": "^0.0.1-security",
+    "lucide-react": "^0.525.0",
+    "next-themes": "^0.4.6",
+    "node-fetch": "^3.3.2",
+    "nyaapi": "^2.4.4",
+    "parse-torrent": "^11.0.18",
+    "radix-ui": "^1.4.2",
+    "rss-parser": "^3.13.0",
+    "smart-buffer": "^4.2.0",
+    "sonner": "^2.0.6",
+    "string-similarity": "^4.0.4",
+    "tailwind-merge": "^3.3.1",
+    "webtorrent": "^2.6.10",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@types/express": "^5.0.3",
+    "@types/parse-torrent": "^5.8.7",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/string-similarity": "^4.0.2",
+    "@types/webtorrent": "^0.110.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.2.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.49",
+    "postcss-import": "^16.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.4.2",
+    "vite": "^5.4.11",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^2.1.5"
+  }
+}
