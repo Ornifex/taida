@@ -187,6 +187,7 @@ export async function fetchTorrentsForAnime(
           `Error searching for ${searchTerm} episode ${episode}:`,
           error.message
         );
+        return episodeList;
       }
     }
   }

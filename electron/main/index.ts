@@ -13,7 +13,9 @@ import fs from "fs";
 import parseTorrent from "parse-torrent";
 import { spawn } from "node:child_process";
 
-const client = new WebTorrent();
+const client = new WebTorrent({
+  maxConns: 55
+});
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -458,4 +460,17 @@ ipcMain.handle("window-close", () => {
     return true;
   }
   return false;
+});
+
+client.on('error', (err) => {
+  console.error('WebTorrent client error:', err);
+  // If it's a UDP-related error, you might want to restart the client
+  if (err.message && (
+      err.message.includes('UDP') || 
+      err.message.includes('EADDRINUSE') ||
+      err.message.includes('ECONNRESET')
+    )) {
+    console.log('UDP-related error detected, handling...');
+    // Handle UDP error (potentially restart client)
+  }
 });
