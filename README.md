@@ -10,9 +10,13 @@ npm install
 npm run dev
 ```
 
+You might need to stop and rerun `npm run dev`. Tested to work on Windows quite quickly from scratch.
+
 ## Taida 
 
 An Electron-based app made for tracking which anime you're watching, with a focus on the current season to stay up to date with what matters. Made during boot.dev hackathon.
+
+怠惰 (Taida) is Japanese for 'laziness'. It's a joke referring to being so lazy you need one app to do all this. It's also a play on Taiga, another anime tracking app.
 
 Using a template from https://github.com/electron-vite/electron-vite-react
 
