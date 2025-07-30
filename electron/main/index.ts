@@ -14,7 +14,13 @@ import parseTorrent from "parse-torrent";
 import { spawn } from "node:child_process";
 
 const client = new WebTorrent({
-  maxConns: 55
+  maxConns: 55,
+  utp: true,
+  tracker: {
+    udp: true,
+    // Increase UDP buffer size
+    udpSocketBufferSize: 5 * 1024 * 1024, // 5MB buffer
+  },
 });
 
 const require = createRequire(import.meta.url);
@@ -342,8 +348,14 @@ const subtitleServer = expressApp.listen(3001, () => {
   console.log("Subtitle server running at http://localhost:3001/subtitles");
 });
 
+const streamServers = new Map();
+
 ipcMain.handle("webtorrent:stream", async (event, infoHash: string) => {
-  //const torrent = await client.get(infoHash);
+  if (streamServers.has(infoHash)) {
+    streamServers.get(infoHash).close();
+    streamServers.delete(infoHash);
+  }
+
   const torrent = await client.torrents.find(
     (t: any) => t.infoHash === infoHash
   );
@@ -418,6 +430,19 @@ ipcMain.handle("webtorrent:stream", async (event, infoHash: string) => {
           console.log("no .mkv file found in torrent");
           event.sender.send("stream-url", null);
         }
+      } else {
+        // Wait for the torrent to be ready, then stream
+        torrent.once("ready", () => {
+          const file = torrent.files.find((f: { name: string }) =>
+            /\.mkv$/.test(f.name)
+          );
+          if (file) {
+            startStreaming(file);
+          } else {
+            console.log("no .mkv file found in torrent (after ready)");
+            event.sender.send("stream-url", null);
+          }
+        });
       }
     } catch (error) {
       console.error("Error streaming torrent:", error);
@@ -428,10 +453,49 @@ ipcMain.handle("webtorrent:stream", async (event, infoHash: string) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
+
+  if (reason instanceof Error) {
+    console.error("Stack:", reason.stack);
+  }
 });
 
-ipcMain.handle("shell:openPath", async (_event, folderPath: string) => {
-  await shell.openPath(folderPath);
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  console.error("Stack:", err.stack);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  console.error("Stack:", err.stack);
+});
+
+client.on("error", (err) => {
+  console.error("WebTorrent client error:", err);
+  if (
+    err.message &&
+    (err.message.includes("UDP") ||
+      err.message.includes("EADDRINUSE") ||
+      err.message.includes("ECONNRESET"))
+  ) {
+    console.log("UDP-related error detected, restarting affected torrents...");
+
+    client.torrents.forEach((torrent) => {
+      if (torrent.numPeers === 0 && !torrent.done) {
+        const magnetURI = torrent.magnetURI;
+        client.remove(torrent, () => {
+          client.add(magnetURI);
+        });
+      }
+    });
+  }
+});
+
+ipcMain.handle("window-close", () => {
+  if (win && !win.isDestroyed()) {
+    win.close();
+    return true;
+  }
+  return false;
 });
 
 ipcMain.handle("window-minimize", () => {
@@ -452,25 +516,4 @@ ipcMain.handle("window-maximize", () => {
     return true;
   }
   return false;
-});
-
-ipcMain.handle("window-close", () => {
-  if (win && !win.isDestroyed()) {
-    win.close();
-    return true;
-  }
-  return false;
-});
-
-client.on('error', (err) => {
-  console.error('WebTorrent client error:', err);
-  // If it's a UDP-related error, you might want to restart the client
-  if (err.message && (
-      err.message.includes('UDP') || 
-      err.message.includes('EADDRINUSE') ||
-      err.message.includes('ECONNRESET')
-    )) {
-    console.log('UDP-related error detected, handling...');
-    // Handle UDP error (potentially restart client)
-  }
 });

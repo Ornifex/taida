@@ -369,7 +369,16 @@ export function WatchView({ onPlayEpisode }: WatchViewProps) {
                                 );
                               updateAnime(anime.id, {
                                 watching: true,
-                                episodeList: episodeList,
+                                episodeList: [
+                                  ...(anime.episodeList ?? []),
+                                  ...episodeList.filter(
+                                    (ep: Episode) =>
+                                      !(anime.episodeList ?? []).some(
+                                        (existing) =>
+                                          existing.number === ep.number
+                                      )
+                                  ),
+                                ],
                               });
                             }}
                             className="gap-1 text-muted-foreground hover:text-muted-foreground"

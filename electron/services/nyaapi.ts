@@ -99,8 +99,113 @@ async function getCurrentSeasonAnime(page: number = 1): Promise<Anime[]> {
   return json.data?.Page.media || [];
 }
 
+async function getAllCurrentSeasonAnime(
+  maxPages: number = 10,
+  delayMs: number = 800,
+  maxYearsBack: number = 5
+): Promise<Anime[]> {
+  const now = new Date();
+  let year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const seasons: ("WINTER" | "SPRING" | "SUMMER" | "FALL")[] = [
+    "WINTER",
+    "SPRING",
+    "SUMMER",
+    "FALL",
+  ];
+
+  let startSeasonIdx: number;
+  if (month >= 3 && month <= 5) startSeasonIdx = 1; // SPRING
+  else if (month >= 6 && month <= 8) startSeasonIdx = 2; // SUMMER
+  else if (month >= 9 && month <= 11) startSeasonIdx = 3; // FALL
+  else startSeasonIdx = 0; // WINTER
+
+  const query = `
+    query ($seasonYear: Int, $season: MediaSeason, $page: Int) {
+      Page(page: $page, perPage: 50) {
+        media(seasonYear: $seasonYear, season: $season, type: ANIME, sort: POPULARITY_DESC) {
+          id
+          idMal
+          title { romaji english native }
+          format
+          status
+          description
+          startDate { year month day }
+          endDate { year month day }
+          season
+          seasonYear
+          episodes
+          duration            
+          trailer { id site thumbnail }        
+          coverImage { large }
+          bannerImage
+          genres
+          synonyms
+          averageScore
+          popularity
+          studios { edges { node { name } } }
+          nextAiringEpisode { airingAt timeUntilAiring episode }
+          siteUrl
+        }
+      }
+    }
+  `;
+
+  let allAnime: Anime[] = [];
+  let yearsChecked = 0;
+  let done = false;
+
+  while (!done && yearsChecked <= maxYearsBack) {
+    for (let s = 0; s < seasons.length; s++) {
+      const seasonIdx = (startSeasonIdx + s) % seasons.length;
+      const season = seasons[seasonIdx];
+      let reachedEnd = false;
+
+      for (let page = 1; page <= maxPages && !reachedEnd; page++) {
+        const variables = { season, seasonYear: year, page };
+        const response = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+
+        const json = (await response.json()) as {
+          data?: { Page: { media: Anime[] } };
+          errors?: any[];
+        };
+
+        if (json.errors) {
+          console.error("AniList API error:", json.errors);
+          return allAnime;
+          await new Promise((res) => setTimeout(res, 1000000));
+          reachedEnd = true;
+          break;
+        }
+
+        const pageAnime = json.data?.Page.media || [];
+        allAnime = allAnime.concat(pageAnime);
+
+        if (pageAnime.length < 50) {
+          reachedEnd = true;
+        }
+
+        if (!reachedEnd && page < maxPages)
+          await new Promise((res) => setTimeout(res, delayMs));
+      }
+    }
+    year--;
+    yearsChecked++;
+
+    // if (allAnime.length > 200) done = true;
+  }
+  return allAnime;
+}
+
 export async function getAnime(): Promise<any[]> {
-  const animeList = await getCurrentSeasonAnime();
+  const animeList = await getAllCurrentSeasonAnime();
 
   return animeList.map((anime) => ({
     ...anime,

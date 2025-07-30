@@ -113,11 +113,16 @@ export default function App() {
         }
       }
     };
-    checkForNewEpisodes();
+
+    // Delay initial check by 30 seconds
+    const timeoutId = setTimeout(checkForNewEpisodes, 30000);
 
     const intervalId = setInterval(checkForNewEpisodes, 2 * 60 * 60 * 1000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, [animeList, updateAnime]);
 
   const sidebarItems = [

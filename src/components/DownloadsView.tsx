@@ -26,7 +26,7 @@ export function DownloadsView() {
     }
     fetchTorrents();
 
-    intervalId = setInterval(fetchTorrents, 500);
+    intervalId = setInterval(fetchTorrents, 3000);
     return () => clearInterval(intervalId);
   }, []);
 

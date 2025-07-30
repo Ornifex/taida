@@ -59,8 +59,14 @@ export function BrowseView() {
       const data = await window.ipcRenderer.invoke("get-anime-data");
       mergeAnimeList(data);
     };
-    fetchAnime();
-  }, [mergeAnimeList]);
+
+    if (animeList.length === 0) {
+      fetchAnime();
+    } else {
+      const timeout = setTimeout(fetchAnime, 30000);
+      return () => clearTimeout(timeout);
+    }
+  }, [animeList.length, mergeAnimeList]);
 
   const getStatusBadge = (status: Anime["status"]) => {
     const variants = {
@@ -68,18 +74,18 @@ export function BrowseView() {
         variant: "default" as const,
         label: "Airing",
       },
-      completed: {
+      finished: {
         variant: "secondary" as const,
         label: "Completed",
       },
-      upcoming: {
-        variant: "outline" as const,
+      not_yet_released: {
+        variant: "destructive" as const,
         label: "Upcoming",
       },
     };
 
     const normalizedStatus =
-      typeof status === "string" ? status.toLowerCase() : "upcoming";
+      typeof status === "string" ? status.toLowerCase() : "Error";
     return (
       variants[normalizedStatus as keyof typeof variants] || variants.upcoming
     );
