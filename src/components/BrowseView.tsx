@@ -194,7 +194,7 @@ export function BrowseView() {
             return (
               <Card
                 className={`cursor-pointer transition-all hover:shadow-lg group overflow-hidden ${
-                  true ? "ring-2 ring-primary/50" : ""
+                  anime.watching ? "ring-2 ring-primary/50" : ""
                 } ${
                   isToday ? "ring-2 ring-yellow-500/30 bg-yellow-500/5" : ""
                 }`}
@@ -282,7 +282,7 @@ export function BrowseView() {
                       {anime.name}
                     </h3>
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {anime.description}
+                      <span dangerouslySetInnerHTML={{ __html: anime.description || "" }} />
                     </p>
                   </div>
 

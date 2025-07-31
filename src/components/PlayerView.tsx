@@ -14,6 +14,7 @@ import {
   MonitorPlay,
 } from "lucide-react";
 import { usePlayerStore } from "../store/playerStore";
+import { useAnimeStore } from "@/store/animeStore";
 
 declare global {
   interface Window {
@@ -46,11 +47,15 @@ export function PlayerView({ onBackToWatch }: PlayerViewProps) {
   const setTimestamp = usePlayerStore((s) => s.setTimestamp);
   const timestamp = usePlayerStore((s) => s.timestamp);
   const currentEpisode = usePlayerStore((s) => s.currentEpisode);
+  const currentAnime = usePlayerStore((s) => s.currentAnime);
+  const animeList = useAnimeStore((s) => s.animeList);
+  const updateAnime = useAnimeStore((s) => s.updateAnime);
 
   useEffect(() => {
     if (currentEpisode?.infoHash) {
       // Set loading state
       setStreamUrl(null);
+      console.log("anime:", currentAnime);
 
       console.log(`Requesting stream for: ${currentEpisode.infoHash}`);
       window.ipcRenderer
@@ -201,6 +206,21 @@ export function PlayerView({ onBackToWatch }: PlayerViewProps) {
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
       setTimestamp(video.currentTime);
+
+      if (currentEpisode) {
+        currentEpisode.watching = "unwatched";
+        currentEpisode.watching = video.currentTime > 1200 ? "watched" : video.currentTime < 60 ? "unwatched" : "watching";
+        if (currentEpisode && currentAnime) {
+          // Create a new episode list with the updated "watching" status
+          const updatedEpisodeList = currentAnime.episodeList.map((ep) =>
+            ep.number === currentEpisode.number
+                ? { ...ep, watching: currentEpisode.watching }
+                : ep
+            );
+            updateAnime(currentAnime.id, { episodeList: updatedEpisodeList });
+          }
+        
+      }
     };
     video.addEventListener("loadedmetadata", onLoadedMetadata);
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -274,9 +294,9 @@ export function PlayerView({ onBackToWatch }: PlayerViewProps) {
                 Back
               </Button>
               <div>
-                <h3 className="font-medium">{currentEpisode?.number}</h3>
+                <h3 className="font-medium">{currentAnime?.name}</h3>
                 <p className="text-sm text-gray-300">
-                  Episode {currentEpisode?.number}
+                  Episode {currentEpisode?.number} {currentEpisode?.watching}
                 </p>
               </div>
             </div>

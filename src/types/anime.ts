@@ -2,6 +2,7 @@ export interface Episode {
   number: number;
   link: string;
   infoHash?: string;
+  watching?: "unwatched" | "watching" | "watched";
 }
 
 export interface Anime {

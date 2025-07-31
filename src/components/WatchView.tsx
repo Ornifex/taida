@@ -110,17 +110,30 @@ export function WatchView({ onPlayEpisode }: WatchViewProps) {
   }, []);
 
   const getEpisodeColor = (episode: Episode) => {
+    if (!episode.infoHash) {
+      return "bg-gray-500 border-gray-400";
+    }
     const torrent = torrents.find((t) => t.infoHash === episode.infoHash);
+
     if (!torrent) {
       return "bg-orange-500 hover:bg-orange-600 border-orange-400";
-    }
-    if (torrent.done) {
-      return "bg-green-500 hover:bg-green-600 border-green-400";
     }
     if (!torrent.done) {
       return "bg-yellow-500 hover:bg-yellow-600 border-yellow-400";
     }
-    return "bg-gray-500 border-gray-400";
+    if (torrent.done && episode.watching === "unwatched") {
+      return "bg-blue-500 hover:bg-blue-600 border-blue-400";
+    }
+    if (torrent.done && episode.watching === "watching") {
+      return "bg-purple-500 hover:bg-purple-600 border-purple-400";
+    }
+    if (torrent.done && episode.watching === "watched") {
+      return "bg-black-500 hover:bg-black-600 border-black-400";
+    }
+    if (torrent.done) {
+      return "bg-green-500 hover:bg-green-600 border-green-400";
+    }
+    return "bg-purple-100 border-border";
   };
 
   const handleEpisodeClick = async (anime: Anime, episode: Episode) => {
@@ -172,7 +185,7 @@ export function WatchView({ onPlayEpisode }: WatchViewProps) {
     );
 
     setTimestamp(0);
-    setCurrentEpisode(episode);
+    setCurrentEpisode(episode, anime);
     onPlayEpisode(episode);
   };
 
@@ -230,6 +243,18 @@ export function WatchView({ onPlayEpisode }: WatchViewProps) {
         />
 
         <div className="flex gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-black-500 border-black-400 border-1 rounded-sm"></div>
+            <span className="text-muted-foreground">Watched</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-purple-500 border-white rounded-sm"></div>
+            <span className="text-muted-foreground">Watching</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 border-white rounded-sm"></div>
+            <span className="text-muted-foreground">Unwatched</span>
+          </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
             <span className="text-muted-foreground">Downloaded</span>
@@ -509,7 +534,7 @@ export function WatchView({ onPlayEpisode }: WatchViewProps) {
                                   handleEpisodeClick(anime, trackedEpisode)
                                 }
                                 onContextMenu={(e) =>
-                                  handleRightClick(anime, trackedEpisode, e)
+                                  handleRightClick(anime, { ...trackedEpisode, watching: "watching" }, e)
                                 }
                               >
                                 {epNum}
