@@ -41,6 +41,7 @@ type View =
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>("landing");
+  const [hideTitleBar, setHideTitleBar] = useState(false);
   const { animeList, updateAnime } = useAnimeStore();
   const metaTorrents = useTorrentStore((state) => state.torrents);
   const addTorrent = useTorrentStore((state) => state.addTorrent);
@@ -134,6 +135,21 @@ export default function App() {
     { id: "settings" as View, label: "Settings", icon: Settings },
   ];
 
+  //when user hits ctrl+b setHideTitleBar to true
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === "b") {
+        event.preventDefault();
+        setHideTitleBar((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const renderView = () => {
     switch (currentView) {
       case "landing":
@@ -162,9 +178,9 @@ export default function App() {
   return (
     <div className="h-screen w-full bg-background dark flex flex-col overflow-hidden">
       <div className="flex-shrink-0">
-        <TitleBar 
-          icon={sidebarItems.find(item => item.id === currentView)?.icon} 
-        />
+        {!hideTitleBar && <TitleBar
+          icon={sidebarItems.find(item => item.id === currentView)?.icon}
+        />}
       </div>
 
       <SidebarProvider>
